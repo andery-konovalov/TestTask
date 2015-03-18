@@ -24,10 +24,11 @@ class TrustManager implements X509TrustManager {
 		BigInteger bi = new BigInteger("4e411d20", 16);
 		BigInteger certsn = cert[0].getSerialNumber();
 		Log.d(TAG, "checkServerTrusted: '" + certsn.toString(16) + "'");
-		if(bi.equals(certsn) == false) {
+		if(!bi.equals(certsn) ) {
 			throw new CertificateException("Invalid certificate serial number");
 		}
 	}
+	
 
 	public X509Certificate[] getAcceptedIssuers() {
 		Log.d(TAG, "getAcceptedIssuers");

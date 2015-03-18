@@ -18,6 +18,7 @@ import android.widget.TextView;
 public class ResultFragment extends Fragment implements Runnable {
 
 	DataNotifier notifier;
+	
 	@Override
 	public void onAttach(Activity a) {
 	    super.onAttach(a);

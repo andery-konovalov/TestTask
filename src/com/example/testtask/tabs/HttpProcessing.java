@@ -22,6 +22,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView.FindListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -42,6 +43,9 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 	
 	private LinearLayout resultLayout;
 	private int resultViewState = View.INVISIBLE; 
+	
+	
+	private Button hideButton;
 
 	private DataNotifier notifier;
 	public void onAttach(Activity a) {
@@ -70,7 +74,7 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 		
 		hostField = new EditText(getActivity().getApplicationContext());
 		edLayout.addView(hostField, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
-		hostField.setTextColor(Color.BLACK);
+//		hostField.setTextColor(Color.BLACK);
 		hostField.setText("https://46.10.208.40");
 /*
 		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -96,7 +100,7 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 		EditText edArr[] = new EditText[]{(challengeUriField = new EditText(getActivity().getApplicationContext())), (solveUriField = new EditText(getActivity().getApplicationContext()))};
 		for(int i = 0;i < 2;i ++) {
 			edArr[i].setText(uriArr[i]);
-			edArr[i].setTextColor(Color.BLACK);
+//			edArr[i].setTextColor(Color.BLACK);
 			mainLayout.addView(edArr[i], new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 		}
 		
@@ -112,6 +116,8 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 			mainLayout.addView(b, lp);
 		}
+		hideButton = (Button)mainLayout.findViewById(HIDE_RESULT_ID);
+		hideButton.setVisibility(View.INVISIBLE);
 		
 		resultLayout = new LinearLayout(getActivity().getApplicationContext());
 		resultLayout.setOrientation(LinearLayout.VERTICAL);
@@ -156,7 +162,7 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 							@Override
 							public void onDownloadingComplete(final JSONObject jResult, int responseCode) {
 								//checking response code !!!
-								Log.d("", jResult.toString());
+								Log.d("", Integer.toString(responseCode));
 								rawData = jResult;
 								//processing data
 								new DataProcessor() {
@@ -172,6 +178,8 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 												resultLayout.setVisibility(View.VISIBLE);
 												resultViewState = View.VISIBLE;
 											}
+											hideButton.setVisibility(View.VISIBLE);
+
 											//sending response
 											new HttpSolver(url, result) {
 												
@@ -211,6 +219,7 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 			case HIDE_RESULT_ID:
 				resultLayout.setVisibility(View.INVISIBLE);
 				resultViewState = View.INVISIBLE;
+				hideButton.setVisibility(View.INVISIBLE);
 				break;
 		}
 	}
