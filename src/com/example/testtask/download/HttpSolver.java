@@ -45,8 +45,7 @@ public abstract class HttpSolver extends HttpsChallenge {
 
 
 
-	private HttpsURLConnection getConnection() throws IOException,
-			ProtocolException {
+	private HttpsURLConnection getConnection() throws IOException, ProtocolException {
 		HttpsURLConnection httpsConnection = (HttpsURLConnection)url.openConnection();
 		httpsConnection.setSSLSocketFactory(TrustSSLSocketFactory.getDefault());
 		httpsConnection.setHostnameVerifier(this);

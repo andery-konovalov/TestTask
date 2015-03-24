@@ -1,4 +1,4 @@
-package com.example.testtask.processor;
+package com.example.testtask.data.processor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +19,7 @@ public abstract class DataProcessor extends AsyncTask<JSONObject, Void, JSONObje
 		return processData(params[0]);
 	}
 	
+/*
 	private String reverse(String str) {
 		String retVal = "";
 //		new StringBuilder(str).reverse();
@@ -27,6 +28,7 @@ public abstract class DataProcessor extends AsyncTask<JSONObject, Void, JSONObje
 		}
 		return retVal;
 	}
+*/
 	
 	private JSONObject processData(JSONObject jObject) {
 		JSONObject jResultObj = null;

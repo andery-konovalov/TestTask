@@ -1,19 +1,16 @@
 package com.example.testtask.tabs;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.example.testtask.DataNotifier;
-import com.example.testtask.download.HttpSolver;
-import com.example.testtask.download.HttpsChallenge;
-import com.example.testtask.processor.DataProcessor;
+import com.example.testtask.NotifyBridgeInterface;
+import com.example.testtask.data.holder.DataNotifierInterface;
+import com.example.testtask.tabs.view.RawDataFragment;
+import com.example.testtask.tabs.view.ResultFragment;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -22,20 +19,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView.FindListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
-public class HttpProcessing extends Fragment implements View.OnClickListener{
+public class MainFragment extends Fragment implements ViewControlsInterface{
 
-	private static final int CHALLENGE_ID = 4;
-	private static final int HIDE_RESULT_ID = 3;
-	private static final int TAB_LAYOUT_ID =10;
 	
-	private JSONObject rawData = null;
-	private JSONObject sortData = null;
 	
 	private EditText hostField;
 	private EditText challengeUriField;
@@ -47,10 +38,10 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 	
 	private Button hideButton;
 
-	private DataNotifier notifier;
+	private DataNotifierInterface notifier;
 	public void onAttach(Activity a) {
 	    super.onAttach(a);
-	    notifier = (DataNotifier)a;
+	    notifier = ((NotifyBridgeInterface)a).getNotifier();
 	}
 
 	public void onSaveInstanceState(Bundle outState) {
@@ -59,7 +50,7 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 	}
 	
 	@Override
-	public void onCreate (Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		if(savedInstanceState != null) {
 			resultViewState = savedInstanceState.getInt("resultViewState", View.INVISIBLE);
@@ -74,16 +65,9 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 		
 		hostField = new EditText(getActivity().getApplicationContext());
 		edLayout.addView(hostField, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
-//		hostField.setTextColor(Color.BLACK);
+		hostField.setTextColor(Color.BLACK);
+		hostField.setBackgroundColor(Color.WHITE);
 		hostField.setText("https://46.10.208.40");
-/*
-		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-		lp.leftMargin = 10;
-		EditText portEd = new EditText(getActivity().getApplicationContext());
-		portEd.setText("8080");
-		portEd.setTextColor(Color.BLACK);
-		edLayout.addView(portEd, lp);
-*/
 		return edLayout;
 	}
 	
@@ -100,7 +84,8 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 		EditText edArr[] = new EditText[]{(challengeUriField = new EditText(getActivity().getApplicationContext())), (solveUriField = new EditText(getActivity().getApplicationContext()))};
 		for(int i = 0;i < 2;i ++) {
 			edArr[i].setText(uriArr[i]);
-//			edArr[i].setTextColor(Color.BLACK);
+			edArr[i].setTextColor(Color.BLACK);
+			edArr[i].setBackgroundColor(Color.WHITE);
 			mainLayout.addView(edArr[i], new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 		}
 		
@@ -112,7 +97,7 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 			Button b = new Button(getActivity().getApplicationContext());
 			b.setText(buttonNames[i]);
 			b.setId(ids[i]);
-			b.setOnClickListener(this);
+			b.setOnClickListener(Controller.getInstance(notifier, this));
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 			mainLayout.addView(b, lp);
 		}
@@ -140,7 +125,7 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 		fl.setId(TAB_LAYOUT_ID);
 		resultLayout.addView(fl);
 		
-		resultLayout.setVisibility(resultViewState);
+		resultLayout.setVisibility(View.INVISIBLE);
 		
 		mainLayout.addView(resultLayout, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
 		
@@ -148,81 +133,49 @@ public class HttpProcessing extends Fragment implements View.OnClickListener{
 	}
 
 	@Override
-	public void onClick(View v) {
-		switch(v.getId()) {
-			case CHALLENGE_ID:{
-				try {
-					final ProgressDialog dialog = new ProgressDialog(getActivity().getApplicationContext());
-					dialog.setMessage("Processing ...");
-					URL url = new URL(hostField.getText().toString() + challengeUriField.getText().toString());
-					if(url.getProtocol().equals("https") == true) {
-						//Getting data
-						new HttpsChallenge(url) {
-							
-							@Override
-							public void onDownloadingComplete(final JSONObject jResult, int responseCode) {
-								//checking response code !!!
-								Log.d("", Integer.toString(responseCode));
-								rawData = jResult;
-								//processing data
-								new DataProcessor() {
-									@Override
-									protected void onProcessingComplete(JSONObject result) {
-										try {
-											URL url = new URL(hostField.getText().toString() + solveUriField.getText().toString());
-											dialog.setMessage("Uploading the result");
-											sortData = result; 
-											//notify tabs
-											notifier.onDataNotifier(rawData, sortData);
-											if(resultLayout.getVisibility() == View.INVISIBLE) {
-												resultLayout.setVisibility(View.VISIBLE);
-												resultViewState = View.VISIBLE;
-											}
-											hideButton.setVisibility(View.VISIBLE);
+	public String getUrl() {
+		return hostField.getText().toString();
+	}
 
-											//sending response
-											new HttpSolver(url, result) {
-												
-												@Override
-												public void onDownloadingComplete(JSONObject jResult, int responseCode) {
-													//check response code
-													dialog.dismiss();
-													AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-													if(jResult != null) {
-														String title;
-														try {
-															title = jResult.getString("result");
-														} catch(JSONException e) {
-															title = "Ex";
-														}
-														builder.setMessage(jResult.toString()).setTitle(title);
-														Log.d("", jResult.toString());
-													} else {
-														builder.setMessage("Response error: " + Integer.toString(responseCode)).setTitle("Error");
-													}
-													builder.setPositiveButton("Close", null);
-													builder.create().show();
-													
-												}
-											}.execute((Void)null);
-										} catch(MalformedURLException e) {
-										}
-									}
-								}.execute(jResult);
-							}
-						}.execute((Void)null);
-					}
-				} catch(MalformedURLException ex) {
-				}
+	@Override
+	public String getChallengeServiceUri() {
+		// TODO Auto-generated method stub
+		return challengeUriField.getText().toString();
+	}
+
+	@Override
+	public void onProcessComplete(JSONObject result, int responseCode) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+		if(result != null) {
+			String title;
+			try {
+				title = result.getString("result");
+			} catch(JSONException e) {
+				title = "Ex";
 			}
-			break;
-			case HIDE_RESULT_ID:
-				resultLayout.setVisibility(View.INVISIBLE);
-				resultViewState = View.INVISIBLE;
-				hideButton.setVisibility(View.INVISIBLE);
-				break;
+			builder.setMessage(result.toString()).setTitle(title);
+			Log.d("", result.toString());
+		} else {
+			builder.setMessage("Response error: " + Integer.toString(responseCode)).setTitle("Error");
+		}
+		builder.setPositiveButton("Close", null);
+		builder.create().show();
+	}
+
+	@Override
+	public String getSolveServiceUri() {
+		// TODO Auto-generated method stub
+		return solveUriField.getText().toString();
+	}
+
+	@Override
+	public void hideShowTabs(boolean hide) {
+		if(hide) {
+			resultLayout.setVisibility(View.INVISIBLE);
+			hideButton.setVisibility(View.INVISIBLE);
+		} else {
+			resultLayout.setVisibility(View.VISIBLE);
+			hideButton.setVisibility(View.VISIBLE);
 		}
 	}
-	
-
 }

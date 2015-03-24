@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.util.Scanner;
 
 import org.json.JSONException;
@@ -34,10 +33,8 @@ abstract class Downloader extends AsyncTask<Void, Void, JSONObject> implements H
 
 			urlConnection.disconnect();
 			
-		} catch(MalformedURLException e) {
-		} catch(IOException e) {
+		} catch(JSONException | IOException e) {
 			e.printStackTrace();
-		} catch(JSONException e) {
 		} finally {
 			if(urlConnection != null) {
 				try {

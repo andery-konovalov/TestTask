@@ -1,6 +1,5 @@
-package com.example.testtask.processor;
+package com.example.testtask.data.processor;
 
-import android.util.Log;
 
 public class DataObject implements Comparable<DataObject> {
 	
